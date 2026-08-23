@@ -5,8 +5,27 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 
 const API_BASE = 'http://localhost:8000/api/v1';
 
-export const SupplierPortalPage: React.FC = () => {
-  const [data, setData] = useState<any>(null);
+const DEMO_SUPPLIER_DATA = {
+  supplier_info: {
+    name: 'Apex Precision Parts Pvt. Ltd.',
+    supplier_code: 'SUP-001',
+    tier: 'TIER-1',
+    reliability_score: 0.87,
+    monthly_capacity_units: 12000,
+    location: 'Pune, Maharashtra',
+    certifications: ['ISO 9001', 'IATF 16949'],
+  },
+  purchase_orders: [
+    { id: 'PO-001', po_number: 'PO-2026-001', order_date: '2026-08-10', expected_delivery_date: '2026-08-24', total_amount: 925000, status: 'DELAYED', component: 'CMP-001 (ECU)', quantity: 500 },
+    { id: 'PO-006', po_number: 'PO-2026-006', order_date: '2026-08-18', expected_delivery_date: '2026-09-02', total_amount: 252000, status: 'PROCESSING', component: 'CMP-004 (Fuel Rail)', quantity: 600 },
+  ],
+  rfqs: [
+    { id: 'RFQ-001', rfq_number: 'EMG-RFQ-2026-001', component: 'CMP-001 (ECU)', quantity: 500, required_by: '2026-08-25', status: 'OPEN', unit_price_offer: 1920, notes: 'Emergency requirement. Priority air freight required.' },
+  ],
+};
+
+
+  const [data, setData] = useState<any>(DEMO_SUPPLIER_DATA);
   const [selectedPo, setSelectedPo] = useState<any>(null);
   const [delayDays, setDelayDays] = useState('5.0');
   const [reasonCode, setReasonCode] = useState('CAPACITY_ISSUE');
@@ -23,13 +42,14 @@ export const SupplierPortalPage: React.FC = () => {
         setData(await res.json());
       }
     } catch (e) {
-      console.error('Failed to fetch supplier portal dashboard', e);
+      // Use demo data when backend unavailable
     }
   };
 
   useEffect(() => {
     fetchSupplierDashboard();
   }, []);
+
 
   const handleReportDelay = async () => {
     if (!selectedPo) return;
