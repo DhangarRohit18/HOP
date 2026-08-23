@@ -25,7 +25,9 @@ const DEMO_SUPPLIER_DATA = {
 };
 
 
+export const SupplierPortalPage: React.FC = () => {
   const [data, setData] = useState<any>(DEMO_SUPPLIER_DATA);
+
   const [selectedPo, setSelectedPo] = useState<any>(null);
   const [delayDays, setDelayDays] = useState('5.0');
   const [reasonCode, setReasonCode] = useState('CAPACITY_ISSUE');

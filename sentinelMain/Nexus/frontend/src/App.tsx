@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { fetchHealthStatus } from './services/api';
 import { HealthFetchState } from './types/health';
 import { AppLayout } from './components/layout/AppLayout';
+import { UserRole } from './components/layout/Header';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { ImpactWorkspacePage } from './pages/ImpactWorkspacePage';
@@ -34,6 +35,7 @@ export function App() {
     }
     return path === '/' ? '/dashboard' : path;
   });
+  const [activeRole, setActiveRole] = useState<UserRole>('OPERATOR');
   const [healthState, setHealthState] = useState<HealthFetchState>({
     data: null,
     loading: true,
@@ -121,6 +123,8 @@ export function App() {
       healthLoading={healthState.loading}
       healthError={healthState.error}
       onRefreshHealth={checkHealth}
+      activeRole={activeRole}
+      onRoleChange={setActiveRole}
       activePath={activePath}
       onNavigate={(path) => setActivePath(path)}
     >
