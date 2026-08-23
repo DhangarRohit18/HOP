@@ -686,12 +686,12 @@ export const GraphViewerPage: React.FC = () => {
                   />
 
                   {/* Node type label */}
-                  <text x="0" y="-12" textAnchor="middle" fill={neonColor} fontSize="7" fontFamily="monospace" fontWeight="700" letterSpacing="1" opacity="0.85">
+                  <text x="0" y="-12" textAnchor="middle" fill="#E2E8F0" fontSize="7" fontFamily="monospace" fontWeight="bold" letterSpacing="1" style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.8)' }}>
                     {node.type}
                   </text>
 
                   {/* Node code — main label */}
-                  <text x="0" y="4" textAnchor="middle" fill={textFill} fontSize="11" fontFamily="monospace" fontWeight="800" letterSpacing="0.5" filter={filterRef}>
+                  <text x="0" y="4" textAnchor="middle" fill="#FFFFFF" fontSize="11" fontFamily="monospace" fontWeight="900" letterSpacing="0.5" style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.9)' }}>
                     {node.code}
                   </text>
 
