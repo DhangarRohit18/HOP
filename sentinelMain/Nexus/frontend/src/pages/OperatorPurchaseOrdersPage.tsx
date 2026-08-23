@@ -4,7 +4,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { MetricCard } from '../components/ui/MetricCard';
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 const DEMO_POS = [
   { id: 'PO-001', po_number: 'PO-2026-001', supplier_code: 'SUP-001', supplier_name: 'Apex Precision Parts', component: 'CMP-001 (ECU)', quantity: 500, order_date: '2026-08-10', expected_delivery_date: '2026-08-24', total_amount: 925000, delay_days: 4.0, status: 'DELAYED', currency: '₹', priority: 'P1-CRITICAL' },

@@ -4,7 +4,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { MetricCard } from '../components/ui/MetricCard';
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 const DEMO_INVENTORY = [
   { id: 'INV-001', part_number: 'CMP-001', name: 'Engine Control Unit (ECU)', current_stock: 48, daily_usage: 12, safety_stock: 60, coverage_days: 4.0, risk_level: 'CRITICAL', warehouse_code: 'WH-PUNE-A1', unit_cost: 1850, last_reorder: '2026-08-20', supplier_code: 'SUP-001' },

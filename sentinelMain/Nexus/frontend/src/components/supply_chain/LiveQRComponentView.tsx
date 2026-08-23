@@ -48,7 +48,7 @@ export const LiveQRComponentView: React.FC<LiveQRComponentViewProps> = ({
   const refreshLiveComponent = async () => {
     setIsRefreshing(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/components/${partId}`);
+      const res = await fetch(`/api/components/${partId}`);
       if (res.ok) {
         const data = await res.json();
         setLiveData(data);

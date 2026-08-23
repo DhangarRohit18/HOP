@@ -4,7 +4,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { MetricCard } from '../components/ui/MetricCard';
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 const DEMO_PRODUCTION = [
   { id: 'PRD-001', order_number: 'PRD-2026-001', product: 'Maruti Baleno (BLN-22)', priority: 'P1-CRITICAL', start_date: '2026-08-22', completion_date: '2026-08-28', required_component: 'CMP-001 (ECU)', qty_required: 400, status: 'BLOCKED', production_risk: 'CRITICAL', line: 'LINE-A1-PUNE', customer_order: 'SO-2026-001' },

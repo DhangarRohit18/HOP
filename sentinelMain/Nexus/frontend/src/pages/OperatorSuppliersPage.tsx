@@ -4,7 +4,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { MetricCard } from '../components/ui/MetricCard';
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = '/api/v1';
 
 const DEMO_SUPPLIERS = [
   { id: 'SUP-001', supplier_code: 'SUP-001', name: 'Apex Precision Parts Pvt. Ltd.', tier: 'TIER-1', reliability_score: 0.87, monthly_capacity_units: 12000, active_pos: 3, risk_status: 'AT_RISK', location: 'Pune, Maharashtra', lead_time_days: 7, defect_rate: '0.8%', payment_terms: 'NET-30', certifications: ['ISO 9001', 'IATF 16949'] },
