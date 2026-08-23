@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Enterprise SCM Portal 2.0</title>
+  <style>
+    :root {
+      --bg-dark: #080B10;
+      --bg-sidebar: #0C1016;
+      --bg-card: #131920;
+      --bg-card-header: #0C1016;
+      --border-color: #27313A;
+      --text-main: #E8EDF2;
+      --text-muted: #AAB5BF;
+      --primary-blue: #38BDF8;
+      --primary-indigo: #D6FF4B;
+      --status-risk: #F87171;
+      --status-warn: #F4C95D;
+      --status-ok: #34D399;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* GLOBAL HEADER */
+    .top-header {
+      height: 56px;
+      background-color: #0b1120;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary-blue);
+      letter-spacing: 0.05em;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .badge-tag {
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--primary-blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* APP LAYOUT */
+    .app-layout {
+      display: flex;
+      flex: 1;
+    }
+
+    /* SIDEBAR NAVIGATION */
+    .sidebar {
+      width: 240px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-header {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 8px 12px 4px 12px;
+      margin-top: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background-color: rgba(99, 102, 241, 0.2);
+      color: var(--primary-indigo);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      padding: 28px 36px;
+      max-width: 1200px;
+    }
+
+    .page-title-bar {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* KPI CARDS GRID */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .kpi-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .kpi-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .kpi-val {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .val-risk { color: var(--status-risk); }
+    .val-warn { color: var(--status-warn); }
+    .val-ok { color: var(--status-ok); }
+
+    /* SECTION CARD */
+    .section-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* DATA TABLES */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th {
+      text-align: left;
+      color: var(--text-muted);
+      padding: 10px 12px;
+      background-color: var(--bg-card-header);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid #273549;
+      color: #cbd5e1;
+    }
+
+    .code-entity {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--primary-blue);
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+
+    .code-entity:hover {
+      color: #7dd3fc;
+    }
+
+    /* VIEW TAB VISIBILITY */
+    .tab-view {
+      display: none;
+    }
+
+    .tab-view.active {
+      display: block;
+    }
+
+    /* TIMELINE FLOW */
+    .workflow-timeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 8px;
+      background-color: #0b1220;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .timeline-step {
+      text-align: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .timeline-step:not(:last-child)::after {
+      content: '➔';
+      position: absolute;
+      right: -8px;
+      top: 30%;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .step-code {
+      font-family: monospace;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--primary-blue);
+    }
+
+    .step-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .step-status {
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP HEADER -->
+  <div class="top-header">
+    <div class="brand-logo">
+      🏢 GLOBAL ENTERPRISE SCM PORTAL 2.0
+    </div>
+    <div class="header-meta">
+      <span class="badge-tag">ENTERPRISE ERP SCM ENGINE</span>
+      <span>Operator: <strong>OP-8821</strong></span>
+      <span>Division: <strong>Global Supply Chain</strong></span>
+    </div>
+  </div>
+
+  <div class="app-layout">
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="sidebar">
+      <div class="nav-header">NAVIGATION</div>
+      <a class="nav-item active" onclick="switchTab('dashboard', this)">📊 Dashboard</a>
+      <a class="nav-item" onclick="switchTab('suppliers', this)">🏭 Suppliers</a>
+      <a class="nav-item" onclick="switchTab('purchase-orders', this)">📄 Purchase Orders</a>
+      <a class="nav-item" onclick="switchTab('shipments', this)">🚚 Shipments</a>
+      <a class="nav-item" onclick="switchTab('inventory', this)">📦 Inventory</a>
+      <a class="nav-item" onclick="switchTab('production', this)">⚙️ Production</a>
+      <a class="nav-item" onclick="switchTab('customer-orders', this)">🛒 Customer Orders</a>
+      <a class="nav-item" onclick="switchTab('risk-monitor', this)">🚨 Risk Monitor</a>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-content">
+
+      <!-- 1. DASHBOARD VIEW -->
+      <div id="dashboard" class="tab-view active">
+        <div class="page-title-bar">
+          <h1 class="page-title">Operational Supply Chain Dashboard</h1>
+          <p class="page-sub">Real-time fulfillment tracking, inventory risk monitoring, and active incident overview.</p>
+        </div>
+
+        <!-- ACTIVE INCIDENT SUMMARY PANEL -->
+        <div class="section-card incident-panel"
+             data-incident-id="INC-2026-001"
+             data-entity-id="SUP-001"
+             data-event-type="SUPPLIER_OUTAGE"
+             data-severity="CRITICAL"
+             data-duration="200"
+             data-status="ACTIVE"
+             style="border: 1px solid #f87171; background-color: rgba(248, 113, 113, 0.08);">
+          <div class="section-title" style="color: #f87171;">
+            <span>🚨 ACTIVE OPERATIONAL INCIDENT — INC-2026-001</span>
+            <span class="badge-tag val-risk" style="color: #f87171; background-color: rgba(248, 113, 113, 0.2);">ACTIVE / CRITICAL</span>
+          </div>
+          <div style="font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+            <p><strong>Incident ID:</strong> <span class="code-entity">INC-2026-001</span></p>
+            <p style="margin-top: 4px;"><strong>Target Supplier:</strong> <span class="code-entity" onclick="switchTab('suppliers')">SUP-001</span> (Apex Semiconductor Inc.)</p>
+            <p style="margin-top: 4px;"><strong>Disruption Event:</strong> <span class="val-risk">SUPPLIER OUTAGE</span></p>
+            <p style="margin-top: 4px;"><strong>Severity Level:</strong> <span class="val-risk">CRITICAL</span> | <strong>Duration:</strong> 200 HOURS</p>
+            <p style="margin-top: 4px;"><strong>Effective Time:</strong> 2026-08-01 12:00 UTC</p>
+            <p style="margin-top: 6px; font-style: italic; color: #94a3b8;">
+              "Apex Semiconductor Inc. is experiencing a critical supplier outage affecting component CMP-001."
+            </p>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Active Supplier Incidents</div>
+            <div class="kpi-val val-risk">1 CRITICAL OUTAGE</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Delayed Shipments</div>
+            <div class="kpi-val val-warn">1 FREIGHT DELAY</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Single Source Components</div>
+            <div class="kpi-val val-warn">1 CRITICAL RISK</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Customer SLA Exposure</div>
+            <div class="kpi-val val-risk">$200,000 AT RISK</div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>Golden Path Operational Fulfillment Pipeline</span>
+            <span class="badge-tag">ACTIVE DEMONSTRATION DATASET</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Entity Name</th>
+                <th>Identifier Code</th>
+                <th>Status</th>
+                <th>Relationship</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Supplier</td>
+                <td>Apex Semiconductor Inc.</td>
+                <td><span class="code-entity" onclick="switchTab('suppliers')">SUP-001</span></td>
+                <td><span class="val-risk">OUTAGE REPORTED</span></td>
+                <td>Primary Microcontroller Vendor</td>
+              </tr>
+              <tr>
+                <td>Purchase Order</td>
+                <td>Mainline Procurement</td>
+                <td><span class="code-entity" onclick="switchTab('purchase-orders')">PO-2026-001</span></td>
+                <td><span class="val-warn">IN PROGRESS</span></td>
+                <td>PO for 5,000 units of CMP-001</td>
+              </tr>
+              <tr>
+                <td>Shipment Freight</td>
+                <td>Apex Transit Air Freight</td>
+                <td><span class="code-entity" onclick="switchTab('shipments')">SHP-2026-001</span></td>
+                <td><span class="val-warn">DELAYED IN TRANSIT</span></td>
+                <td>Air Freight Shipment TPE -> SJC</td>
+              </tr>
+              <tr>
+                <td>Component Resource</td>
+                <td>32-bit MCU Microcontroller</td>
+                <td><span class="code-entity" onclick="switchTab('inventory')">CMP-001</span></td>
+                <td><span class="val-warn">SINGLE SOURCE / RESERVED</span></td>
+                <td>Key component for PRD-2026-001</td>
+              </tr>
+              <tr>
+                <td>Production Order</td>
+                <td>Mainline Assembly Run</td>
+                <td><span class="code-entity" onclick="switchTab('production')">PRD-2026-001</span></td>
+                <td><span class="val-warn">SCHEDULED</span></td>
+                <td>San Jose Line 4 Assembly</td>
+              </tr>
+              <tr>
+                <td>Customer Order</td>
+                <td>Titan Motors Automotive Contract</td>
+                <td><span class="code-entity" onclick="switchTab('customer-orders')">SO-2026-001</span></td>
+                <td><span class="val-risk">SLA RISK (+4 DAYS)</span></td>
+                <td>Contract Delivery: 2026-08-18</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top: 20px;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">
+              REALISTIC OPERATIONAL WORKFLOW TIMELINE
+            </div>
+            <div class="workflow-timeline">
+              <div class="timeline-step">
+                <div class="step-code">SUP-001</div>
+                <div class="step-label">Supplier Outage</div>
+                <div class="step-status val-risk">CRITICAL (200h)</div>
+              </div>
+              <div class="timeline-step">
+                <div class="step-code">PO-2026-001</div>
+                <div class="step-label">Procurement</div>
+                <div class="step-status val-warn">Pending Delivery</div>
+              </div>
+              <div class="timeline-step">
+                <div class="step-code">SHP-2026-001</div>
+                <div class="step-label">Freight Transit</div>
+                <div class="step-status val-warn">Delayed (Air)</div>
+              </div>
+              <div class="timeline-step">
+                <div class="step-code">CMP-001</div>
+                <div class="step-label">Component Stock</div>
+                <div class="step-status val-warn">0 Usable</div>
+              </div>
+              <div class="timeline-step">
+                <div class="step-code">PRD-2026-001</div>
+                <div class="step-label">Assembly Line</div>
+                <div class="step-status val-warn">Delayed Start</div>
+              </div>
+              <div class="timeline-step">
+                <div class="step-code">SO-2026-001</div>
+                <div class="step-label">Titan Motors</div>
+                <div class="step-status val-risk">$200,000 Exposure</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. SUPPLIERS VIEW -->
+      <div id="suppliers" class="tab-view">
+        <div class="page-title-bar">
+          <h1 class="page-title">Supplier Details — SUP-001</h1>
+          <p class="page-sub">Apex Semiconductor Inc. Vendor Profile & Active Disruption Status</p>
+        </div>
+
+        <div class="section-card incident-panel"
+             data-incident-id="INC-2026-001"
+             data-entity-id="SUP-001"
+             data-event-type="SUPPLIER_OUTAGE"
+             data-severity="CRITICAL"
+             data-duration="200"
+             data-status="ACTIVE"
+             style="border: 1px solid #f87171; background-color: rgba(248, 113, 113, 0.08);">
+          <div class="section-title" style="color: #f87171;">
+            <span>🚨 ACTIVE OPERATIONAL INCIDENT — INC-2026-001</span>
+            <span class="badge-tag val-risk" style="color: #f87171; background-color: rgba(248, 113, 113, 0.2);">ACTIVE / CRITICAL</span>
+          </div>
+          <div style="font-size: 13px; line-height: 1.6; color: #cbd5e1;">
+            <p><strong>Incident ID:</strong> <span class="code-entity">INC-2026-001</span></p>
+            <p style="margin-top: 4px;"><strong>Target Supplier:</strong> <span class="code-entity">SUP-001</span> (Apex Semiconductor Inc.)</p>
+            <p style="margin-top: 4px;"><strong>Disruption Event:</strong> <span class="val-risk">SUPPLIER OUTAGE</span></p>
+            <p style="margin-top: 4px;"><strong>Severity Level:</strong> <span class="val-risk">CRITICAL</span> | <strong>Duration:</strong> 200 HOURS</p>
+            <p style="margin-top: 6px; font-style: italic; color: #94a3b8;">
+              "Apex Semiconductor Inc. is experiencing a critical supplier outage affecting component CMP-001."
+            </p>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>Supplier Status: SUP-001 (Apex Semiconductor Inc.)</span>
+            <span class="badge-tag val-risk" style="color: #f87171;">AT RISK — OUTAGE REPORTED</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+            <div>
+              <p><strong>Supplier ID:</strong> <span class="code-entity">SUP-001</span></p>
+              <p style="margin-top: 6px;"><strong>Legal Entity:</strong> Apex Semiconductor Inc.</p>
+              <p style="margin-top: 6px;"><strong>Facility Location:</strong> Hsinchu Science Park, Taiwan</p>
+              <p style="margin-top: 6px;"><strong>Primary Supplied Part:</strong> <span class="code-entity" onclick="switchTab('inventory')">CMP-001</span> (32-bit MCU Microcontroller)</p>
+            </div>
+            <div>
+              <p><strong>Active Incident:</strong> <span class="val-risk">SUPPLIER OUTAGE</span></p>
+              <p style="margin-top: 6px;"><strong>Incident Severity:</strong> <span class="val-risk">CRITICAL</span></p>
+              <p style="margin-top: 6px;"><strong>Estimated Disruption Duration:</strong> 200 hours</p>
+              <p style="margin-top: 6px;"><strong>Linked Orders:</strong> <span class="code-entity" onclick="switchTab('purchase-orders')">PO-2026-001</span> | <span class="code-entity" onclick="switchTab('shipments')">SHP-2026-001</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. PURCHASE ORDERS VIEW -->
+      <div id="purchase-orders" class="tab-view">
+        <div class="page-title-bar">
+          <h1 class="page-title">Purchase Order — PO-2026-001</h1>
+          <p class="page-sub">Component Procurement Record for Mainline Assembly</p>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>PO-2026-001 Order Details</span>
+            <span class="badge-tag val-warn" style="color: #fbbf24;">STATUS: IN PROGRESS</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+            <div>
+              <p><strong>Purchase Order ID:</strong> <span class="code-entity">PO-2026-001</span></p>
+              <p style="margin-top: 6px;"><strong>Vendor:</strong> <span class="code-entity" onclick="switchTab('suppliers')">SUP-001</span> (Apex Semiconductor)</p>
+              <p style="margin-top: 6px;"><strong>Line Component:</strong> <span class="code-entity" onclick="switchTab('inventory')">CMP-001</span> (32-bit MCU)</p>
+              <p style="margin-top: 6px;"><strong>Order Quantity:</strong> 5,000 units</p>
+            </div>
+            <div>
+              <p><strong>Expected Delivery Date:</strong> 2026-08-14</p>
+              <p style="margin-top: 6px;"><strong>Linked Shipment:</strong> <span class="code-entity" onclick="switchTab('shipments')">SHP-2026-001</span></p>
+              <p style="margin-top: 6px;"><strong>Downstream Production:</strong> <span class="code-entity" onclick="switchTab('production')">PRD-2026-001</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. SHIPMENTS VIEW -->
+      <div id="shipments" class="tab-view">
+        <div class="page-title-bar">
+          <h1 class="page-title">Shipment Tracking — SHP-2026-001</h1>
+          <p class="page-sub">Air Freight Transit Status & Delay Tracking</p>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>SHP-2026-001 Freight Details</span>
+            <span class="badge-tag val-warn" style="color: #fbbf24;">STATUS: DELAYED IN TRANSIT</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+            <div>
+              <p><strong>Shipment ID:</strong> <span class="code-entity">SHP-2026-001</span></p>
+              <p style="margin-top: 6px;"><strong>Freight Carrier:</strong> Apex Transit Air Express</p>
+              <p style="margin-top: 6px;"><strong>Origin / Destination:</strong> Taipei (TPE) ➔ San Jose (SJC)</p>
+              <p style="margin-top: 6px;"><strong>Cargo Manifest:</strong> 5,000 units <span class="code-entity" onclick="switchTab('inventory')">CMP-001</span></p>
+            </div>
+            <div>
+              <p><strong>Associated PO:</strong> <span class="code-entity" onclick="switchTab('purchase-orders')">PO-2026-001</span></p>
+              <p style="margin-top: 6px;"><strong>Origin Supplier:</strong> <span class="code-entity" onclick="switchTab('suppliers')">SUP-001</span></p>
+              <p style="margin-top: 6px;"><strong>Estimated Arrival:</strong> 2026-08-16 (Delayed by 2 days)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. INVENTORY VIEW -->
+      <div id="inventory" class="tab-view">
+        <div class="page-title-bar">
+          <h1 class="page-title">Inventory Risk — CMP-001</h1>
+          <p class="page-sub">32-bit MCU Microcontroller Stock Level & Single Source Analysis</p>
+        </div>
+
+        <!-- DIGITAL MATERIAL IDENTITY & QR SECTION -->
+        <div class="section-card" style="border: 1px solid #0284c7; background-color: rgba(2, 132, 199, 0.08);">
+          <div class="section-title" style="color: #38bdf8;">
+            <span>🏷️ DIGITAL MATERIAL IDENTITY — CMP-001-00427</span>
+            <span class="badge-tag" style="color: #38bdf8; background-color: rgba(56, 189, 248, 0.2);">VERIFIED PHYSICAL UNIT</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 180px; gap: 20px; font-size: 13px;">
+            <div>
+              <p><strong>Material Unit ID:</strong> <span class="code-entity">CMP-001-00427</span></p>
+              <p style="margin-top: 6px;"><strong>Serial Number:</strong> MCU-00427</p>
+              <p style="margin-top: 6px;"><strong>Batch Number:</strong> BATCH-2026-0710</p>
+              <p style="margin-top: 6px;"><strong>Physical Condition:</strong> <span class="val-risk">AT_RISK</span> | <strong>Quality:</strong> <span class="val-ok">VERIFIED</span> | <strong>Inspection:</strong> <span class="val-ok">PASSED</span></p>
+              <p style="margin-top: 6px;"><strong>NEXUS QR Identity Code:</strong> <code style="color: #38bdf8; background-color: #020617; padding: 2px 6px; border-radius: 4px; font-family: monospace;">NEXUS-MAT:CMP-001-00427</code></p>
+              <p style="margin-top: 8px; font-size: 11px; color: var(--text-muted); font-style: italic;">
+                "Scan or input QR identity in NEXUS Side Panel to resolve live material intelligence."
+              </p>
+            </div>
+            <div style="text-align: center; background-color: #020617; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <!-- DETERMINISTIC SVG QR REPRESENTATION -->
+              <svg width="90" height="90" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="#020617"/>
+                <rect x="10" y="10" width="30" height="30" fill="#38bdf8"/>
+                <rect x="15" y="15" width="20" height="20" fill="#020617"/>
+                <rect x="20" y="20" width="10" height="10" fill="#38bdf8"/>
+                <rect x="60" y="10" width="30" height="30" fill="#38bdf8"/>
+                <rect x="65" y="15" width="20" height="20" fill="#020617"/>
+                <rect x="70" y="20" width="10" height="10" fill="#38bdf8"/>
+                <rect x="10" y="60" width="30" height="30" fill="#38bdf8"/>
+                <rect x="15" y="65" width="20" height="20" fill="#020617"/>
+                <rect x="20" y="70" width="10" height="10" fill="#38bdf8"/>
+                <rect x="50" y="50" width="10" height="10" fill="#38bdf8"/>
+                <rect x="70" y="50" width="20" height="10" fill="#38bdf8"/>
+                <rect x="50" y="70" width="20" height="20" fill="#38bdf8"/>
+                <rect x="80" y="80" width="10" height="10" fill="#38bdf8"/>
+              </svg>
+              <span style="font-size: 9px; font-family: monospace; color: #64748b; margin-top: 6px;">NEXUS-MAT:CMP-001-00427</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>Component: CMP-001 (32-bit MCU)</span>
+            <span class="badge-tag val-risk" style="color: #f87171;">CRITICAL SINGLE SOURCE RESTRICTION</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+            <div>
+              <p><strong>Component Code:</strong> <span class="code-entity">CMP-001</span></p>
+              <p style="margin-top: 6px;"><strong>Part Name:</strong> 32-bit Automotive MCU Microcontroller</p>
+              <p style="margin-top: 6px;"><strong>Current Warehouse Stock:</strong> 50 units</p>
+              <p style="margin-top: 6px;"><strong>Reserved Stock:</strong> 50 units (Allocated to <span class="code-entity" onclick="switchTab('production')">PRD-2026-001</span>)</p>
+              <p style="margin-top: 6px;"><strong>Usable Available Stock:</strong> <span class="val-risk">0 units</span></p>
+            </div>
+            <div>
+              <p><strong>Approved Suppliers Count:</strong> 1 (<span class="code-entity" onclick="switchTab('suppliers')">SUP-001</span> Only)</p>
+              <p style="margin-top: 6px;"><strong>Single Source Constraint:</strong> <span class="val-risk">YES (SINGLE_SOURCE_RESTRICTION)</span></p>
+              <p style="margin-top: 6px;"><strong>Downstream Dependency:</strong> <span class="code-entity" onclick="switchTab('customer-orders')">SO-2026-001</span> (Titan Motors)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. PRODUCTION VIEW -->
+      <div id="production" class="tab-view">
+        <div class="page-title-bar">
+          <h1 class="page-title">Production Order — PRD-2026-001</h1>
+          <p class="page-sub">San Jose Plant Line 4 Mainline Assembly Run</p>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>PRD-2026-001 Assembly Status</span>
+            <span class="badge-tag val-warn" style="color: #fbbf24;">STATUS: SCHEDULED / AT RISK</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+            <div>
+              <p><strong>Production Order ID:</strong> <span class="code-entity">PRD-2026-001</span></p>
+              <p style="margin-top: 6px;"><strong>Assembly Line:</strong> Line 4 — San Jose Manufacturing Plant</p>
+              <p style="margin-top: 6px;"><strong>Planned Start Date:</strong> 2026-08-15</p>
+              <p style="margin-top: 6px;"><strong>Planned Completion:</strong> 2026-08-18</p>
+            </div>
+            <div>
+              <p><strong>Required Component:</strong> <span class="code-entity" onclick="switchTab('inventory')">CMP-001</span></p>
+              <p style="margin-top: 6px;"><strong>Supplier Origin:</strong> <span class="code-entity" onclick="switchTab('suppliers')">SUP-001</span></p>
+              <p style="margin-top: 6px;"><strong>Customer Order Contract:</strong> <span class="code-entity" onclick="switchTab('customer-orders')">SO-2026-001</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. CUSTOMER ORDERS VIEW -->
+      <div id="customer-orders" class="tab-view">
+        <div class="page-title-bar">
+          <h1 class="page-title">Customer Order — SO-2026-001</h1>
+          <p class="page-sub">Titan Motors Automotive Contract SLA Exposure</p>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>SO-2026-001 Contract Details</span>
+            <span class="badge-tag val-risk" style="color: #f87171;">SLA DELAY EXPOSURE: $200,000</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+            <div>
+              <p><strong>Sales Order ID:</strong> <span class="code-entity">SO-2026-001</span></p>
+              <p style="margin-top: 6px;"><strong>Customer Name:</strong> Titan Motors Automotive Inc.</p>
+              <p style="margin-top: 6px;"><strong>Contractual Delivery Date:</strong> 2026-08-18</p>
+              <p style="margin-top: 6px;"><strong>Estimated Delivery Date:</strong> <span class="val-risk">2026-08-22 (+4 days delay)</span></p>
+            </div>
+            <div>
+              <p><strong>Liquidated Damages Rate:</strong> $50,000 / day</p>
+              <p style="margin-top: 6px;"><strong>Total Financial Exposure:</strong> <span class="val-risk">$200,000.00</span></p>
+              <p style="margin-top: 6px;"><strong>Linked Production Run:</strong> <span class="code-entity" onclick="switchTab('production')">PRD-2026-001</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. RISK MONITOR VIEW -->
+      <div id="risk-monitor" class="tab-view">
+        <div class="page-title-bar">
+          <h1 class="page-title">Supply Chain Risk Monitor</h1>
+          <p class="page-sub">Disruption propagation analysis and bottleneck signals across active operational entities.</p>
+        </div>
+
+        <div class="section-card">
+          <div class="section-title">
+            <span>Active Risk Signals & Bottleneck Overview</span>
+            <span class="badge-tag val-risk" style="color: #f87171;">CRITICAL BOTTLENECK DETECTED</span>
+          </div>
+          <div style="font-size: 13px; line-height: 1.6;">
+            <p style="margin-bottom: 10px;">
+              <strong>Primary Risk Origin:</strong> <span class="code-entity" onclick="switchTab('suppliers')">SUP-001</span> reported a 200-hour operational outage at its primary manufacturing facility.
+            </p>
+            <p style="margin-bottom: 10px;">
+              <strong>Downstream Propagation:</strong> Procurement order <span class="code-entity" onclick="switchTab('purchase-orders')">PO-2026-001</span> and air freight shipment <span class="code-entity" onclick="switchTab('shipments')">SHP-2026-001</span> are delayed, causing stock exhaustion for single-sourced component <span class="code-entity" onclick="switchTab('inventory')">CMP-001</span>.
+            </p>
+            <p>
+              <strong>Impact on Customer SLA:</strong> Production run <span class="code-entity" onclick="switchTab('production')">PRD-2026-001</span> delay propagates directly to customer order <span class="code-entity" onclick="switchTab('customer-orders')">SO-2026-001</span> for Titan Motors, creating a 4-day SLA delay and a baseline financial exposure of $200,000.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId, el) {
+      const tabs = document.querySelectorAll('.tab-view');
+      tabs.forEach(t => t.classList.remove('active'));
+
+      const target = document.getElementById(tabId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      if (el && el.classList.contains('nav-item')) {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+      } else {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(n => {
+          if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(tabId)) {
+            navItems.forEach(i => i.classList.remove('active'));
+            n.classList.add('active');
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>

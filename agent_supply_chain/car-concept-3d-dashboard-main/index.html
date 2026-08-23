@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="Interactive 3D car concept dashboard featuring a Sketchfab-origin concept car with material variants, animated parts, and real-time controls. Built with Three.js.">
+<meta name="theme-color" content="#0a0a0f">
+<title>Car Concept 3D Dashboard — Interactive Viewer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --bg: #0a0a0f;
+    --panel-bg: rgba(16, 16, 24, 0.92);
+    --border: rgba(255,255,255,0.08);
+    --text: #e0e0e0;
+    --text-muted: #888;
+    --accent: #3b82f6;
+    --accent2: #8b5cf6;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  #canvas-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+  }
+  #canvas-container canvas { display: block; }
+
+  #loading {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; background: var(--bg);
+    transition: opacity 0.5s;
+  }
+  #loading.hidden { opacity: 0; pointer-events: none; }
+  #loading .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  #loading .progress-bar {
+    width: 240px; height: 4px; background: rgba(255,255,255,0.1);
+    border-radius: 2px; margin-top: 20px; overflow: hidden;
+  }
+  #loading .progress-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 2px; transition: width 0.3s;
+    width: 0%;
+  }
+  #loading .progress-text {
+    margin-top: 8px; font-size: 13px; color: var(--text-muted);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #ui-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 10; pointer-events: none;
+  }
+
+  .panel {
+    pointer-events: all;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    backdrop-filter: blur(16px);
+    padding: 16px;
+    position: fixed;
+  }
+
+  /* Top bar */
+  #top-bar {
+    top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; padding: 8px 16px;
+    align-items: center;
+  }
+  #top-bar .logo {
+    font-weight: 700; font-size: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  #top-bar .badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  /* Left panel - Controls */
+  #left-panel {
+    top: 80px; left: 12px; width: 260px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  #left-panel::-webkit-scrollbar { width: 4px; }
+  #left-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-bottom: 10px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04); color: var(--text);
+    cursor: pointer; font-size: 13px; font-family: inherit;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+  .btn:active { transform: scale(0.97); }
+  .btn.active {
+    background: rgba(59,130,246,0.15); border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn.danger.active {
+    background: rgba(239,68,68,0.15); border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  .btn-row {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+  }
+
+  .color-swatch {
+    width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.2s;
+  }
+  .color-swatch:hover { transform: scale(1.1); }
+  .color-swatch.active { border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+
+  /* Right panel - Specs */
+  #right-panel {
+    top: 80px; right: 12px; width: 220px;
+  }
+  .spec-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .spec-item:last-child { border-bottom: none; }
+  .spec-label { color: var(--text-muted); }
+  .spec-value { font-weight: 600; }
+
+  /* Bottom controls */
+  #bottom-bar {
+    bottom: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; padding: 10px 16px;
+  }
+
+  /* Slider */
+  .slider-group { margin-bottom: 12px; }
+  .slider-group label {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .slider-group label span { color: var(--text); font-weight: 600; }
+  input[type="range"] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: rgba(255,255,255,0.1); border-radius: 2px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+
+  .divider {
+    height: 1px; background: var(--border); margin: 14px 0;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed; z-index: 30; pointer-events: none;
+    background: var(--panel-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px;
+    opacity: 0; transition: opacity 0.15s;
+  }
+
+  /* ─── Bottom Sheet (mobile) ─── */
+  #bottom-sheet {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    /* Hide desktop panels on mobile */
+    #left-panel, #right-panel, #bottom-bar { display: none !important; }
+
+    /* Compact top bar on mobile */
+    #top-bar {
+      top: max(8px, env(safe-area-inset-top, 8px));
+      left: 0; right: 0; transform: none;
+      border-radius: 0;
+      padding: 8px 16px;
+      justify-content: center;
+      gap: 10px;
+      border-left: none; border-right: none;
+      background: rgba(10, 10, 15, 0.85);
+    }
+    #top-bar .badge:first-of-type { display: none; }
+    #top-bar .logo { font-size: 14px; }
+    #top-bar .badge { font-size: 10px; padding: 2px 8px; }
+
+    /* Bottom sheet container */
+    #bottom-sheet {
+      display: block;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 20;
+      background: rgba(16, 16, 24, 0.96);
+      border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 62vh;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    #bottom-sheet.collapsed {
+      transform: translateY(calc(100% - 72px));
+    }
+    #bottom-sheet.expanded {
+      transform: translateY(0);
+    }
+
+    /* Drag handle */
+    .sheet-handle {
+      width: 36px; height: 5px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      margin: 10px auto 6px;
+      flex-shrink: 0;
+      cursor: grab;
+    }
+    .sheet-handle:active { cursor: grabbing; }
+
+    /* Sheet tab bar */
+    .sheet-tabs {
+      display: flex; gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin: 0 12px 10px;
+      flex-shrink: 0;
+    }
+    .sheet-tab {
+      flex: 1; text-align: center;
+      padding: 10px 4px;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .sheet-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* Sheet content area */
+    .sheet-content {
+      flex: 1; overflow-y: auto;
+      padding: 0 16px 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sheet-content::-webkit-scrollbar { width: 0; }
+
+    .sheet-pane { display: none; }
+    .sheet-pane.active { display: block; }
+
+    /* Quick actions row (visible when collapsed) */
+    .sheet-quick-actions {
+      display: flex; gap: 8px;
+      padding: 0 16px 8px;
+      flex-shrink: 0;
+      justify-content: center;
+    }
+    #bottom-sheet.expanded .sheet-quick-actions { display: none; }
+    #bottom-sheet.collapsed .sheet-quick-actions { display: flex; }
+
+    .quick-btn {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .quick-btn:active { background: rgba(255,255,255,0.15); transform: scale(0.93); }
+    .quick-btn.active { background: rgba(59,130,246,0.2); border-color: var(--accent); color: var(--accent); }
+
+    /* Mobile button sizes */
+    .sheet-pane .btn {
+      padding: 12px 16px; font-size: 14px;
+      border-radius: 12px; min-height: 48px;
+      justify-content: center;
+    }
+    .sheet-pane .color-swatch {
+      width: 44px; height: 44px;
+    }
+    .sheet-pane .btn-row {
+      gap: 8px; margin-bottom: 12px;
+    }
+    .sheet-pane .section-title {
+      font-size: 11px; margin-bottom: 8px;
+    }
+    .sheet-pane input[type="range"] {
+      height: 6px;
+    }
+    .sheet-pane input[type="range"]::-webkit-slider-thumb {
+      width: 24px; height: 24px;
+    }
+
+    /* Specs pill inside sheet */
+    .specs-pill {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 12px;
+    }
+    .specs-pill .spec-chip {
+      font-size: 12px; padding: 6px 12px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .specs-pill .spec-chip strong {
+      color: var(--text-muted); font-weight: 400; margin-right: 4px;
+    }
+
+    /* Footer on mobile */
+    footer {
+      bottom: max(76px, env(safe-area-inset-bottom, 0px) + 60px);
+      font-size: 9px; padding: 4px 8px;
+      z-index: 6;
+    }
+  }
+
+  /* Tablet (768px - 1024px) */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    #left-panel { width: 240px; }
+    #right-panel { width: 190px; font-size: 12px; }
+    #right-panel .spec-item { font-size: 12px; padding: 6px 0; }
+    #top-bar { padding: 6px 14px; }
+    #top-bar .badge:first-of-type { display: inline; }
+    #bottom-bar { padding: 8px 12px; gap: 6px; }
+    #bottom-bar .btn { font-size: 12px; padding: 6px 12px; }
+  }
+
+  footer {
+    position: fixed; bottom: -2px; left: 50%; transform: translateX(-50%);
+    z-index: 5; text-align: center; padding: 8px;
+    opacity: 0.35; font-size: 10px; color: #666;
+    font-family: system-ui; pointer-events: none;
+  }
+  footer a { color: #3b82f6; text-decoration: none; pointer-events: all; }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-text" id="progress-text">Loading 3D Model...</div>
+</div>
+
+<button id="mobile-toggle" onclick="document.getElementById('left-panel').classList.toggle('open')">&#9776;</button>
+
+<div id="bottom-sheet" class="collapsed">
+  <div class="sheet-handle" id="sheet-handle"></div>
+  <div class="sheet-tabs">
+    <div class="sheet-tab active" data-pane="pane-colors">Colors</div>
+    <div class="sheet-tab" data-pane="pane-anim">Animate</div>
+    <div class="sheet-tab" data-pane="pane-cam">Cameras</div>
+    <div class="sheet-tab" data-pane="pane-settings">Settings</div>
+  </div>
+  <div class="sheet-content">
+    <div class="sheet-pane active" id="pane-colors">
+      <div class="section-title">Paint Color</div>
+      <div class="btn-row" id="mobile-color-swatches">
+        <div class="color-swatch active" data-variant="0" style="background: linear-gradient(135deg, #8b0000, #cc2222);" title="Carmine Candy"></div>
+        <div class="color-swatch" data-variant="1" style="background: linear-gradient(135deg, #e8e0d0, #f5f0e8, #c8b896);" title="Pearly Swirly"></div>
+        <div class="color-swatch" data-variant="2" style="background: linear-gradient(135deg, #2a2a2a, #555, #1a1a1a);" title="Torched Graphite"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="section-title">View Mode</div>
+      <div class="btn-row">
+        <button class="btn active" data-action="turntable">Turntable</button>
+        <button class="btn" data-action="orbit">Free Orbit</button>
+      </div>
+      <div class="divider"></div>
+      <div class="section-title">Vehicle Info</div>
+      <div class="specs-pill">
+        <span class="spec-chip"><strong>Type</strong> Concept Coupe</span>
+        <span class="spec-chip"><strong>Doors</strong> 2-Door</span>
+        <span class="spec-chip"><strong>Style</strong> Futuristic GT</span>
+        <span class="spec-chip"><strong>Paint</strong> <span id="mobile-spec-paint">Carmine Candy</span></span>
+        <span class="spec-chip"><strong>Engine</strong> Mid</span>
+        <span class="spec-chip"><strong>Source</strong> Sketchfab</span>
+      </div>
+    </div>
+    <div class="sheet-pane" id="pane-anim">
+      <div class="section-title">Body Panels</div>
+      <div class="btn-row">
+        <button class="btn" data-action="door-left" data-toggle="true">Left Door</button>
+        <button class="btn" data-action="door-right" data-toggle="true">Right Door</button>
+        <button class="btn" data-action="hood" data-toggle="true">Hood</button>
+        <button class="btn" data-action="hatch" data-toggle="true">Hatch</button>
+      </div>
+      <div class="divider"></div>
+      <div class="section-title">Motion</div>
+      <div class="btn-row">
+        <button class="btn" data-action="spin-wheels" data-toggle="true">Spin Wheels</button>
+        <button class="btn" data-action="drive" data-toggle="true">Drive Loop</button>
+        <button class="btn" data-action="explode" data-toggle="true">Explode View</button>
+        <button class="btn" data-action="reset-all">Reset All</button>
+      </div>
+    </div>
+    <div class="sheet-pane" id="pane-cam">
+      <div class="section-title">Camera Presets</div>
+      <div class="btn-row">
+        <button class="btn" data-action="cam-front">Front</button>
+        <button class="btn" data-action="cam-back">Back</button>
+        <button class="btn" data-action="cam-side">Side</button>
+        <button class="btn" data-action="cam-top">Top</button>
+        <button class="btn" data-action="cam-interior">Interior</button>
+      </div>
+    </div>
+    <div class="sheet-pane" id="pane-settings">
+      <div class="section-title">Lighting</div>
+      <div class="slider-group">
+        <label>Brightness <span id="mobile-light-val">100%</span></label>
+        <input type="range" id="mobile-light-slider" min="20" max="200" value="100">
+      </div>
+      <div class="divider"></div>
+      <div class="section-title">Display</div>
+      <div class="btn-row">
+        <button class="btn" id="mobile-btn-wireframe">Wireframe</button>
+        <button class="btn" id="mobile-btn-screenshot">Screenshot</button>
+        <button class="btn" id="mobile-btn-fullscreen">Fullscreen</button>
+      </div>
+    </div>
+  </div>
+  <div class="sheet-quick-actions">
+    <button class="quick-btn" data-quick="door-left" title="Left Door">&#128682;</button>
+    <button class="quick-btn" data-quick="door-right" title="Right Door">&#128682;</button>
+    <button class="quick-btn" data-quick="spin-wheels" title="Spin Wheels">&#9881;</button>
+    <button class="quick-btn" data-quick="reset-all" title="Reset">&#8634;</button>
+  </div>
+</div>
+
+<div id="ui-overlay">
+  <!-- Top Bar -->
+  <div class="panel" id="top-bar">
+    <span class="logo">Car Concept 3D</span>
+    <span class="badge">Sketchfab Model</span>
+    <span class="badge" id="fps-badge">60 FPS</span>
+  </div>
+
+  <!-- Left Panel - Controls -->
+  <div class="panel" id="left-panel">
+    <div class="section-title">Paint Color</div>
+    <div class="btn-row" id="color-swatches">
+      <div class="color-swatch active" data-variant="0" style="background: linear-gradient(135deg, #8b0000, #cc2222);" title="Carmine Candy"></div>
+      <div class="color-swatch" data-variant="1" style="background: linear-gradient(135deg, #e8e0d0, #f5f0e8, #c8b896);" title="Pearly Swirly"></div>
+      <div class="color-swatch" data-variant="2" style="background: linear-gradient(135deg, #2a2a2a, #555, #1a1a1a);" title="Torched Graphite"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">View Mode</div>
+    <div class="btn-row">
+      <button class="btn active" data-action="turntable">Turntable</button>
+      <button class="btn" data-action="orbit">Free Orbit</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">Animations</div>
+    <div class="btn-row">
+      <button class="btn" data-action="door-left" data-toggle="true">Left Door</button>
+      <button class="btn" data-action="door-right" data-toggle="true">Right Door</button>
+      <button class="btn" data-action="hood" data-toggle="true">Hood</button>
+      <button class="btn" data-action="hatch" data-toggle="true">Hatch</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn" data-action="spin-wheels" data-toggle="true">Spin Wheels</button>
+      <button class="btn" data-action="drive" data-toggle="true">Drive Loop</button>
+      <button class="btn" data-action="explode" data-toggle="true">Explode View</button>
+      <button class="btn" data-action="reset-all">Reset All</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">Lighting</div>
+    <div class="slider-group">
+      <label>Brightness <span id="light-val">100%</span></label>
+      <input type="range" id="light-slider" min="20" max="200" value="100">
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">Camera Presets</div>
+    <div class="btn-row">
+      <button class="btn" data-action="cam-front">Front</button>
+      <button class="btn" data-action="cam-back">Back</button>
+      <button class="btn" data-action="cam-side">Side</button>
+      <button class="btn" data-action="cam-top">Top</button>
+      <button class="btn" data-action="cam-interior">Interior</button>
+    </div>
+  </div>
+
+  <!-- Right Panel - Specs -->
+  <div class="panel" id="right-panel">
+    <div class="section-title">Vehicle Specs</div>
+    <div class="spec-item"><span class="spec-label">Type</span><span class="spec-value">Concept Coupe</span></div>
+    <div class="spec-item"><span class="spec-label">Doors</span><span class="spec-value">2-Door</span></div>
+    <div class="spec-item"><span class="spec-label">Style</span><span class="spec-value">Futuristic GT</span></div>
+    <div class="spec-item"><span class="spec-label">Paint</span><span class="spec-value" id="spec-paint">Carmine Candy</span></div>
+    <div class="spec-item"><span class="spec-label">Body</span><span class="spec-value">Carbon Fiber</span></div>
+    <div class="spec-item"><span class="spec-label">Engine</span><span class="spec-value">Mid-Engine</span></div>
+    <div class="spec-item"><span class="spec-label">Wheels</span><span class="spec-value">20" Alloy</span></div>
+    <div class="spec-item"><span class="spec-label">Source</span><span class="spec-value">Sketchfab</span></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">
+      Model by Unity Fan<br>
+      CC BY 4.0 · Khronos Group
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="panel" id="bottom-bar">
+    <button class="btn" id="btn-screenshot">Screenshot</button>
+    <button class="btn" id="btn-wireframe">Wireframe</button>
+    <button class="btn" id="btn-fullscreen">Fullscreen</button>
+    <span style="display:flex;align-items:center;font-size:12px;color:var(--text-muted);margin-left:8px;" id="info-text">
+      Drag to orbit &bull; Scroll to zoom
+    </span>
+  </div>
+</div>
+
+<footer>
+  <a href="https://nebulacloud.studio">Built with NebulaCloud Studio</a>
+</footer>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+// ─── Scene Setup ──────────────────────────────────
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth <= 768 ? 1.5 : 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+// Environment background
+scene.background = new THREE.Color(0x1a1a2e);
+scene.fog = new THREE.Fog(0x1a1a2e, 8, 40);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(3.5, 1.8, 5.5);
+camera.lookAt(0, 0.3, 0);
+
+// ─── Lighting ─────────────────────────────────────
+const ambientLight = new THREE.AmbientLight(0x404060, 1.5);
+scene.add(ambientLight);
+
+const keyLight = new THREE.DirectionalLight(0xffffff, 8);
+keyLight.position.set(5, 8, 5);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.width = 2048;
+keyLight.shadow.mapSize.height = 2048;
+keyLight.shadow.camera.near = 0.5;
+keyLight.shadow.camera.far = 50;
+keyLight.shadow.camera.left = -10;
+keyLight.shadow.camera.right = 10;
+keyLight.shadow.camera.top = 10;
+keyLight.shadow.camera.bottom = -10;
+keyLight.shadow.bias = -0.0001;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0x8888ff, 2);
+fillLight.position.set(-3, 2, -2);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(0xffffff, 4);
+rimLight.position.set(0, 1, -5);
+scene.add(rimLight);
+
+const bottomLight = new THREE.DirectionalLight(0x4466aa, 2);
+bottomLight.position.set(0, -1, 3);
+scene.add(bottomLight);
+
+// ─── Ground ───────────────────────────────────────
+const groundGeo = new THREE.PlaneGeometry(20, 20);
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x1a1a2e,
+  roughness: 0.4,
+  metalness: 0.3
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -1.5;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Grid helper
+const grid = new THREE.PolarGridHelper(6, 32, 24, 128, 0x444466, 0x333355);
+grid.position.y = -1.49;
+scene.add(grid);
+
+// ─── Orbit Controls ──────────────────────────────
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.3, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2;
+controls.maxDistance = 10;
+controls.maxPolarAngle = Math.PI * 0.75;
+controls.minPolarAngle = 0.3;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1.0;
+controls.update();
+
+// ─── Car Model ────────────────────────────────────
+let carModel = null;
+let carParts = {};
+const originalMaterials = new Map();
+const variantMaterials = [[], [], []];
+let currentVariant = 0;
+
+// State
+let state = {
+  turntable: true,
+  doorLeft: false,
+  doorRight: false,
+  hood: false,
+  hatch: false,
+  spinWheels: false,
+  drive: false,
+  explode: false,
+  wireframe: false
+};
+
+// Animation targets
+const animTargets = {
+  doorLeftAngle: 0, doorRightAngle: 0,
+  hoodAngle: 0, hatchAngle: 0,
+  wheelRotation: 0,
+  explodeAmount: 0,
+  driveOffset: 0
+};
+
+const paintNames = ['Carmine Candy', 'Pearly Swirly', 'Torched Graphite'];
+const paintColors = [
+  { main: 0x991111, accent: 0xcc2222, interior: 0x1a1414, name: 'Carmine Candy' },
+  { main: 0xe8e0d0, accent: 0xf5f0e8, interior: 0x2a2520, name: 'Pearly Swirly' },
+  { main: 0x333333, accent: 0x555555, interior: 0x1a1a1a, name: 'Torched Graphite' }
+];
+
+function findNodeByName(root, name) {
+  if (root.name === name) return root;
+  for (const child of root.children) {
+    const found = findNodeByName(child, name);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findNodesByPattern(root, pattern) {
+  const results = [];
+  root.traverse(node => {
+    if (node.name && node.name.toLowerCase().includes(pattern.toLowerCase())) {
+      results.push(node);
+    }
+  });
+  return results;
+}
+
+// ─── Load Model ──────────────────────────────────
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
+const progressFill = document.getElementById('progress-fill');
+const progressText = document.getElementById('progress-text');
+const loadingEl = document.getElementById('loading');
+
+gltfLoader.load(
+  'CarConcept.glb',
+  (gltf) => {
+    carModel = gltf.scene;
+    scene.add(carModel);
+
+    // Discover car parts by exact node names
+    const findNode = (root, name) => {
+      if (root.name === name) return root;
+      for (const child of root.children) {
+        const found = findNode(child, name);
+        if (found) return found;
+      }
+      return null;
+    };
+
+    carParts.doorLeft  = findNode(carModel, 'BodyDoorLColor1');
+    carParts.doorRight = findNode(carModel, 'BodyDoorRColor1');
+    carParts.hood      = findNode(carModel, 'BodyHood');
+    carParts.hatch     = findNode(carModel, 'BodyRearPanelsColor1');
+    carParts.wheelFL   = findNode(carModel, 'WheelFrontL');
+    carParts.wheelFR   = findNode(carModel, 'WheelFrontR');
+    carParts.wheelRL   = findNode(carModel, 'WheelRearL');
+    carParts.wheelRR   = findNode(carModel, 'WheelRearR');
+    carParts.steering  = findNode(carModel, 'InteriorSteeringCylinder');
+
+    console.log('Car parts found:', {
+      doorLeft: !!carParts.doorLeft,
+      doorRight: !!carParts.doorRight,
+      hood: !!carParts.hood,
+      hatch: !!carParts.hatch,
+      wheelFL: !!carParts.wheelFL,
+      wheelFR: !!carParts.wheelFR,
+      wheelRL: !!carParts.wheelRL,
+      wheelRR: !!carParts.wheelRR,
+      steering: !!carParts.steering,
+    });
+
+    // Store default positions for explode animation
+    if (carParts.doorLeft) carParts.doorLeft.userData.defaultPos = carParts.doorLeft.position.clone();
+    if (carParts.doorRight) carParts.doorRight.userData.defaultPos = carParts.doorRight.position.clone();
+    if (carParts.hood) carParts.hood.userData.defaultPos = carParts.hood.position.clone();
+    if (carParts.hatch) carParts.hatch.userData.defaultPos = carParts.hatch.position.clone();
+
+    // Find body paint meshes
+    const paintMeshes = [];
+    carModel.traverse(node => {
+      if (node.isMesh && node.material) {
+        const matName = (node.material.name || '').toLowerCase();
+        if (matName.includes('paint') || matName.includes('panel')) {
+          paintMeshes.push({ mesh: node, origColor: node.material.color?.getHex() || 0x991111 });
+        }
+      }
+    });
+
+    // Store for variant switching
+    carParts.paintMeshes = paintMeshes;
+
+    // Center and scale model
+    const box = new THREE.Box3().setFromObject(carModel);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const scale = 3.5 / maxDim;
+    carModel.scale.setScalar(scale);
+    carModel.position.set(-center.x * scale, -center.y * scale + 0.2, -center.z * scale);
+
+    // Enable shadows on all meshes
+    carModel.traverse(node => {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
+      }
+    });
+
+    // Hide loading screen
+    loadingEl.classList.add('hidden');
+    setTimeout(() => loadingEl.remove(), 500);
+  },
+  (progress) => {
+    const pct = Math.round((progress.loaded / progress.total) * 100);
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `Loading 3D Model... ${pct}%`;
+  },
+  (error) => {
+    progressText.textContent = 'Error loading model. Please refresh.';
+    console.error('Model load error:', error);
+  }
+);
+
+// ─── Animation Loop ──────────────────────────────
+const clock = new THREE.Clock();
+let fpsFrames = 0, fpsTime = 0;
+
+function animateCameraPreset(target) {
+  const presets = {
+    front: { pos: [0, 0.4, 4.5], look: [0, 0.3, 0] },
+    back: { pos: [0, 0.6, -4.0], look: [0, 0.3, 0] },
+    side: { pos: [5.0, 0.4, 0], look: [0, 0.3, 0] },
+    top: { pos: [0, 5.5, 0.5], look: [0, 0.3, 0] },
+    interior: { pos: [0, 0.7, 1.2], look: [0, 0.3, -0.5] }
+  };
+
+  const preset = presets[target];
+  if (!preset) return;
+
+  const startPos = camera.position.clone();
+  const startTarget = controls.target.clone();
+  const endPos = new THREE.Vector3(...preset.pos);
+  const endTarget = new THREE.Vector3(...preset.look);
+
+  const startTime = performance.now();
+  const duration = 1000;
+
+  function animateCam(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1.0);
+    const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+    controls.update();
+
+    if (t < 1) {
+      requestAnimationFrame(animateCam);
+    }
+  }
+  requestAnimationFrame(animateCam);
+}
+
+// ─── Variant Switching ──────────────────────────
+function applyVariant(index) {
+  currentVariant = index;
+  const paint = paintColors[index];
+
+  if (carParts.paintMeshes) {
+    carParts.paintMeshes.forEach(({ mesh }) => {
+      if (mesh.material.color) {
+        // Slightly vary the color based on the paint name in the material
+        const matName = (mesh.material.name || '').toLowerCase();
+        if (matName.includes('paint') || matName.includes('body') || matName.includes('panel')) {
+          mesh.material.color.set(paint.main);
+          mesh.material.needsUpdate = true;
+        }
+      }
+    });
+  }
+
+  // Also update interior materials
+  if (carModel) {
+    carModel.traverse(node => {
+      if (node.isMesh && node.material) {
+        const matName = (node.material.name || '').toLowerCase();
+        if (matName.includes('interior') || matName.includes('dashboard')) {
+          if (node.material.color) {
+            node.material.color.set(paint.interior);
+            node.material.needsUpdate = true;
+          }
+        }
+      }
+    });
+  }
+
+  document.getElementById('spec-paint').textContent = paint.name;
+}
+
+// ─── UI Event Handlers ───────────────────────────
+document.querySelectorAll('.btn[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const action = btn.dataset.action;
+    const isToggle = btn.dataset.toggle === 'true';
+
+    if (isToggle) {
+      btn.classList.toggle('active');
+      const active = btn.classList.contains('active');
+
+      // Map dashed action names to camelCase state keys
+      const stateKeyMap = {
+        'door-left': 'doorLeft',
+        'door-right': 'doorRight',
+        'spin-wheels': 'spinWheels',
+        'drive': 'drive',
+        'hood': 'hood',
+        'hatch': 'hatch',
+        'explode': 'explode',
+        'turntable': 'turntable',
+        'orbit': 'orbit',
+      };
+      const stateKey = stateKeyMap[action] || action.replace(/-/g, '');
+      if (state.hasOwnProperty(stateKey)) {
+        state[stateKey] = active;
+      }
+
+      if (action === 'drive') {
+        // Drive overrides explode
+        if (active) {
+          document.querySelector('.btn[data-action="explode"]')?.classList.remove('active');
+          state.explode = false;
+          animTargets.explodeAmount = 0;
+        }
+      }
+      if (action === 'explode') {
+        if (active) {
+          document.querySelector('.btn[data-action="drive"]')?.classList.remove('active');
+          state.drive = false;
+          animTargets.driveOffset = 0;
+          if (carModel) carModel.position.x = 0;
+        }
+      }
+
+      // Sync mobile quick buttons
+      syncQuickButtons();
+    }
+
+    // Non-toggle actions
+    switch (action) {
+      case 'turntable':
+        state.turntable = true;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.0;
+        document.querySelector('.btn[data-action="turntable"]').classList.add('active');
+        document.querySelector('.btn[data-action="orbit"]').classList.remove('active');
+        break;
+      case 'orbit':
+        state.turntable = false;
+        controls.autoRotate = false;
+        document.querySelector('.btn[data-action="orbit"]').classList.add('active');
+        document.querySelector('.btn[data-action="turntable"]').classList.remove('active');
+        break;
+      case 'reset-all':
+        resetAll();
+        break;
+      case 'cam-front':
+      case 'cam-back':
+      case 'cam-side':
+      case 'cam-top':
+      case 'cam-interior':
+        animateCameraPreset(action.replace('cam-', ''));
+        break;
+    }
+  });
+});
+
+// Color swatches
+document.querySelectorAll('.color-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    const variant = parseInt(swatch.dataset.variant);
+    // Update all swatch groups
+    document.querySelectorAll('#color-swatches .color-swatch').forEach((s, i) => {
+      s.classList.toggle('active', i === variant);
+    });
+    document.querySelectorAll('#mobile-color-swatches .color-swatch').forEach((s, i) => {
+      s.classList.toggle('active', i === variant);
+    });
+    applyVariant(variant);
+  });
+});
+
+// Light slider
+const lightSlider = document.getElementById('light-slider');
+lightSlider.addEventListener('input', () => {
+  const val = parseInt(lightSlider.value);
+  document.getElementById('light-val').textContent = val + '%';
+  const factor = val / 100;
+  keyLight.intensity = 8 * factor;
+  fillLight.intensity = 2 * factor;
+  rimLight.intensity = 4 * factor;
+  ambientLight.intensity = 1.5 * factor;
+  renderer.toneMappingExposure = 1.2 * factor;
+});
+
+// Screenshot
+document.getElementById('btn-screenshot').addEventListener('click', () => {
+  renderer.render(scene, camera);
+  const link = document.createElement('a');
+  link.download = 'car-concept-screenshot.png';
+  link.href = renderer.domElement.toDataURL('image/png');
+  link.click();
+});
+
+// Wireframe
+document.getElementById('btn-wireframe').addEventListener('click', function() {
+  state.wireframe = !state.wireframe;
+  this.classList.toggle('active', state.wireframe);
+  if (carModel) {
+    carModel.traverse(node => {
+      if (node.isMesh && node.material) {
+        if (Array.isArray(node.material)) {
+          node.material.forEach(m => { if (m.wireframe !== undefined) m.wireframe = state.wireframe; });
+        } else {
+          node.material.wireframe = state.wireframe;
+        }
+      }
+    });
+  }
+});
+
+// Fullscreen
+document.getElementById('btn-fullscreen').addEventListener('click', () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.body.requestFullscreen();
+  }
+});
+
+function resetAll() {
+  state.doorLeft = state.doorRight = state.hood = state.hatch = false;
+  state.spinWheels = state.drive = state.explode = false;
+  state.wireframe = false;
+  state.turntable = true;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.0;
+
+  document.querySelectorAll('.btn.active').forEach(b => b.classList.remove('active'));
+  document.querySelector('.btn[data-action="turntable"]').classList.add('active');
+  document.getElementById('btn-wireframe').classList.remove('active');
+
+  animTargets.doorLeftAngle = animTargets.doorRightAngle = 0;
+  animTargets.hoodAngle = animTargets.hatchAngle = 0;
+  animTargets.wheelRotation = 0;
+  animTargets.explodeAmount = 0;
+  animTargets.driveOffset = 0;
+
+  // Reset wireframe
+  if (carModel) {
+    carModel.position.set(carModel.position.x, carModel.position.y, 0);
+
+    // Reset all animated parts
+    if (carParts.doorLeft) {
+      carParts.doorLeft.rotation.y = 0;
+      if (carParts.doorLeft.userData.defaultPos) carParts.doorLeft.position.copy(carParts.doorLeft.userData.defaultPos);
+    }
+    if (carParts.doorRight) {
+      carParts.doorRight.rotation.y = 0;
+      if (carParts.doorRight.userData.defaultPos) carParts.doorRight.position.copy(carParts.doorRight.userData.defaultPos);
+    }
+    if (carParts.hood) {
+      carParts.hood.rotation.x = 0;
+      if (carParts.hood.userData.defaultPos) carParts.hood.position.copy(carParts.hood.userData.defaultPos);
+    }
+    if (carParts.hatch) {
+      carParts.hatch.rotation.x = 0;
+      if (carParts.hatch.userData.defaultPos) carParts.hatch.position.copy(carParts.hatch.userData.defaultPos);
+    }
+    if (carParts.steering) carParts.steering.rotation.z = 0;
+
+    // Reset wheel rims
+    const wheelGroups = [carParts.wheelFL, carParts.wheelFR, carParts.wheelRL, carParts.wheelRR];
+    wheelGroups.forEach(wg => {
+      if (wg) wg.children.forEach(c => { if (c.name.toLowerCase().includes('rim')) c.rotation.x = 0; });
+    });
+
+    carModel.traverse(node => {
+      if (node.isMesh && node.material) {
+        const mats = Array.isArray(node.material) ? node.material : [node.material];
+        mats.forEach(m => { if (m.wireframe !== undefined) m.wireframe = false; });
+      }
+    });
+  }
+
+  applyVariant(0);
+  document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('active', i === 0));
+  lightSlider.value = 100;
+  document.getElementById('light-val').textContent = '100%';
+  keyLight.intensity = 8;
+  fillLight.intensity = 2;
+  rimLight.intensity = 4;
+  ambientLight.intensity = 1.5;
+  renderer.toneMappingExposure = 1.2;
+
+  // Reset camera
+  const endPos = new THREE.Vector3(3.5, 1.8, 5.5);
+  const endTarget = new THREE.Vector3(0, 0.3, 0);
+  camera.position.copy(endPos);
+  controls.target.copy(endTarget);
+  controls.update();
+
+  // Sync mobile UI
+  syncQuickButtons();
+  const mobileWireframeBtn = document.getElementById('mobile-btn-wireframe');
+  if (mobileWireframeBtn) mobileWireframeBtn.classList.remove('active');
+  if (document.getElementById('mobile-light-slider')) {
+    document.getElementById('mobile-light-slider').value = 100;
+    document.getElementById('mobile-light-val').textContent = '100%';
+  }
+}
+
+// ─── Keyboard Shortcuts ──────────────────────────
+window.addEventListener('keydown', (e) => {
+  const keyMap = {
+    '1': 'cam-front', '2': 'cam-back', '3': 'cam-side', '4': 'cam-top', '5': 'cam-interior',
+    'r': 'reset-all', 'f': 'fullscreen', 'w': 'wireframe',
+    'q': 'door-left', 'e': 'door-right', 'h': 'hood', 't': 'hatch',
+    's': 'spin-wheels', 'd': 'drive', 'x': 'explode'
+  };
+  const action = keyMap[e.key.toLowerCase()];
+  if (action) {
+    if (action.startsWith('cam-')) {
+      animateCameraPreset(action.replace('cam-', ''));
+    } else if (action === 'reset-all') {
+      resetAll();
+    } else if (action === 'fullscreen') {
+      document.getElementById('btn-fullscreen').click();
+    } else if (action === 'wireframe') {
+      document.getElementById('btn-wireframe').click();
+    } else {
+      const btn = document.querySelector(`.btn[data-action="${action}"]`);
+      if (btn) btn.click();
+    }
+  }
+});
+
+// ─── Render Loop ──────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+
+  const dt = Math.min(clock.getDelta(), 0.1);
+  const lerpSpeed = 5.0;
+
+  // FPS counter
+  fpsFrames++;
+  fpsTime += dt;
+  if (fpsTime >= 0.5) {
+    const fps = Math.round(fpsFrames / fpsTime);
+    document.getElementById('fps-badge').textContent = fps + ' FPS';
+    fpsFrames = 0;
+    fpsTime = 0;
+  }
+
+  // Smooth animation targets
+  const targetDoorAngle = state.doorLeft || state.doorRight ? Math.PI * 0.6 : 0;
+  if (state.doorLeft || state.explode) {
+    animTargets.doorLeftAngle += (targetDoorAngle - animTargets.doorLeftAngle) * lerpSpeed * dt;
+  } else {
+    animTargets.doorLeftAngle += (0 - animTargets.doorLeftAngle) * lerpSpeed * dt;
+  }
+  if (state.doorRight || state.explode) {
+    animTargets.doorRightAngle += (targetDoorAngle - animTargets.doorRightAngle) * lerpSpeed * dt;
+  } else {
+    animTargets.doorRightAngle += (0 - animTargets.doorRightAngle) * lerpSpeed * dt;
+  }
+
+  const targetHoodAngle = state.hood || state.explode ? Math.PI * 0.5 : 0;
+  animTargets.hoodAngle += (targetHoodAngle - animTargets.hoodAngle) * lerpSpeed * dt;
+
+  const targetHatchAngle = state.hatch || state.explode ? Math.PI * 0.55 : 0;
+  animTargets.hatchAngle += (targetHatchAngle - animTargets.hatchAngle) * lerpSpeed * dt;
+
+  if (state.spinWheels || state.drive) {
+    animTargets.wheelRotation += dt * 8;
+  }
+
+  if (state.explode) {
+    animTargets.explodeAmount += (1.0 - animTargets.explodeAmount) * lerpSpeed * dt;
+  } else {
+    animTargets.explodeAmount += (0 - animTargets.explodeAmount) * lerpSpeed * dt;
+  }
+
+  // Drive animation
+  if (state.drive) {
+    animTargets.driveOffset += dt * 0.8;
+    if (carModel) {
+      carModel.position.x = Math.sin(animTargets.driveOffset * Math.PI) * 2.0;
+    }
+  }
+
+  // Apply animations to car parts
+  if (carModel) {
+    const exp = animTargets.explodeAmount;
+
+    // Door left (BodyDoorLColor1) - rotate around local Y axis to swing outward
+    if (carParts.doorLeft) {
+      carParts.doorLeft.rotation.y = animTargets.doorLeftAngle;
+      if (exp > 0.01) {
+        const def = carParts.doorLeft.userData.defaultPos;
+        carParts.doorLeft.position.x = def.x - exp * 1.2;
+      }
+    }
+
+    // Door right (BodyDoorRColor1) - rotate around local Y axis (opposite direction)
+    if (carParts.doorRight) {
+      carParts.doorRight.rotation.y = -animTargets.doorRightAngle;
+      if (exp > 0.01) {
+        const def = carParts.doorRight.userData.defaultPos;
+        carParts.doorRight.position.x = def.x + exp * 1.2;
+      }
+    }
+
+    // Hood (BodyHood) - rotate around local X axis to lift up
+    if (carParts.hood) {
+      carParts.hood.rotation.x = -animTargets.hoodAngle;
+      if (exp > 0.01) {
+        const def = carParts.hood.userData.defaultPos;
+        carParts.hood.position.y = def.y + exp * 0.6;
+      }
+    }
+
+    // Hatch (BodyRearPanelsColor1) - rotate around local X axis to lift up at the back
+    if (carParts.hatch) {
+      carParts.hatch.rotation.x = animTargets.hatchAngle;
+      if (exp > 0.01) {
+        const def = carParts.hatch.userData.defaultPos;
+        carParts.hatch.position.y = def.y + exp * 0.4;
+      }
+    }
+
+    // Steering wheel rotation
+    if (carParts.steering && state.spinWheels) {
+      carParts.steering.rotation.z = animTargets.wheelRotation * 0.3;
+    } else if (carParts.steering) {
+      carParts.steering.rotation.z = 0;
+    }
+
+    // Wheels - each wheel group has rim/brake children that need to spin
+    const wheelGroups = [carParts.wheelFL, carParts.wheelFR, carParts.wheelRL, carParts.wheelRR];
+    wheelGroups.forEach(wg => {
+      if (wg) {
+        // The wheel group itself doesn't rotate; we rotate the rim children
+        wg.children.forEach(child => {
+          const name = child.name.toLowerCase();
+          if (name.includes('rim')) {
+            child.rotation.x = animTargets.wheelRotation;
+          }
+        });
+      }
+    });
+
+    // Explode: translate parts outward when not in any specific state
+    if (exp < 0.01) {
+      // Smoothly return doors to default positions
+      if (carParts.doorLeft && carParts.doorLeft.userData.defaultPos) {
+        const def = carParts.doorLeft.userData.defaultPos;
+        carParts.doorLeft.position.lerp(def, lerpSpeed * dt);
+      }
+      if (carParts.doorRight && carParts.doorRight.userData.defaultPos) {
+        const def = carParts.doorRight.userData.defaultPos;
+        carParts.doorRight.position.lerp(def, lerpSpeed * dt);
+      }
+      if (carParts.hood && carParts.hood.userData.defaultPos) {
+        const def = carParts.hood.userData.defaultPos;
+        carParts.hood.position.lerp(def, lerpSpeed * dt);
+      }
+      if (carParts.hatch && carParts.hatch.userData.defaultPos) {
+        const def = carParts.hatch.userData.defaultPos;
+        carParts.hatch.position.lerp(def, lerpSpeed * dt);
+      }
+    }
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ─── Resize Handler ──────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ─── Touch support for mobile ───────────────────
+window.addEventListener('touchstart', () => {}, { passive: true });
+
+// ─── Bottom Sheet (mobile) ─────────────────────
+const bottomSheet = document.getElementById('bottom-sheet');
+const sheetHandle = document.getElementById('sheet-handle');
+let sheetExpanded = false;
+let touchStartY = 0;
+let sheetStartY = 0;
+
+function syncQuickButtons() {
+  document.querySelectorAll('.quick-btn').forEach(qb => {
+    const action = qb.dataset.quick;
+    const mappedKey = {
+      'door-left': 'doorLeft',
+      'door-right': 'doorRight',
+      'spin-wheels': 'spinWheels',
+    }[action];
+    if (mappedKey) {
+      qb.classList.toggle('active', !!state[mappedKey]);
+    }
+  });
+}
+
+function toggleSheet(expand) {
+  sheetExpanded = typeof expand === 'boolean' ? expand : !sheetExpanded;
+  bottomSheet.classList.toggle('expanded', sheetExpanded);
+  bottomSheet.classList.toggle('collapsed', !sheetExpanded);
+}
+
+function collapseSheet() {
+  sheetExpanded = false;
+  bottomSheet.classList.remove('expanded');
+  bottomSheet.classList.add('collapsed');
+}
+
+// Click handle to toggle
+sheetHandle.addEventListener('click', () => toggleSheet());
+
+// Tap canvas area to collapse sheet (only on quick taps, not drags)
+let canvasTapStart = 0;
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  canvasTapStart = Date.now();
+});
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (sheetExpanded && window.innerWidth <= 768 && Date.now() - canvasTapStart < 200) {
+    collapseSheet();
+    e.stopPropagation();
+  }
+  canvasTapStart = 0;
+});
+
+// Drag gesture on sheet handle
+sheetHandle.addEventListener('pointerdown', (e) => {
+  touchStartY = e.clientY;
+  sheetStartY = bottomSheet.getBoundingClientRect().top;
+  e.stopPropagation();
+});
+
+document.addEventListener('pointermove', (e) => {
+  if (touchStartY && window.innerWidth <= 768) {
+    const deltaY = e.clientY - touchStartY;
+    if (Math.abs(deltaY) > 10) {
+      if (deltaY > 40) collapseSheet();
+      else if (deltaY < -40) toggleSheet(true);
+    }
+  }
+});
+
+document.addEventListener('pointerup', () => {
+  touchStartY = 0;
+});
+
+// Swipe down in sheet content to collapse
+const sheetContent = document.querySelector('.sheet-content');
+sheetContent.addEventListener('pointerdown', (e) => {
+  if (sheetContent.scrollTop <= 0) {
+    touchStartY = e.clientY;
+  }
+});
+
+// Tab switching
+document.querySelectorAll('.sheet-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const paneId = tab.dataset.pane;
+    document.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sheet-pane').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(paneId).classList.add('active');
+    if (!sheetExpanded) toggleSheet(true);
+  });
+});
+
+// Quick action buttons
+document.querySelectorAll('.quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const action = btn.dataset.quick;
+    const desktopBtn = document.querySelector(`.btn[data-action="${action}"]`);
+    if (desktopBtn) desktopBtn.click();
+    btn.classList.toggle('active');
+  });
+});
+
+// Sync mobile color swatches - handled by unified click handler above
+
+// Sync mobile light slider
+const mobileLightSlider = document.getElementById('mobile-light-slider');
+mobileLightSlider.addEventListener('input', () => {
+  const val = parseInt(mobileLightSlider.value);
+  document.getElementById('mobile-light-val').textContent = val + '%';
+  document.getElementById('light-slider').value = val;
+  document.getElementById('light-val').textContent = val + '%';
+  const factor = val / 100;
+  keyLight.intensity = 8 * factor;
+  fillLight.intensity = 2 * factor;
+  rimLight.intensity = 4 * factor;
+  ambientLight.intensity = 1.5 * factor;
+  renderer.toneMappingExposure = 1.2 * factor;
+});
+
+// Mobile wireframe button
+document.getElementById('mobile-btn-wireframe').addEventListener('click', () => {
+  document.getElementById('btn-wireframe').click();
+  document.getElementById('mobile-btn-wireframe').classList.toggle('active', state.wireframe);
+});
+
+// Mobile screenshot
+document.getElementById('mobile-btn-screenshot').addEventListener('click', () => {
+  renderer.render(scene, camera);
+  const link = document.createElement('a');
+  link.download = 'car-concept-screenshot.png';
+  link.href = renderer.domElement.toDataURL('image/png');
+  link.click();
+});
+
+// Mobile fullscreen
+document.getElementById('mobile-btn-fullscreen').addEventListener('click', () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.body.requestFullscreen();
+  }
+});
+
+// Sync spec paint text
+const origApplyVariant = applyVariant;
+applyVariant = function(index) {
+  origApplyVariant(index);
+  const paintName = paintNames[index];
+  const mobileSpec = document.getElementById('mobile-spec-paint');
+  if (mobileSpec) mobileSpec.textContent = paintName;
+  document.getElementById('spec-paint').textContent = paintName;
+};
+
+// Sync mobile buttons with desktop state (call after toggle)
+const origBtnHandler = document.querySelectorAll('.btn[data-action]')[0]?.onclick;
+
+// Start
+animate();
+</script>
+
+</body>
+</html>

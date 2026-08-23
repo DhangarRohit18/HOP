@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg-main: #ffffff;
+  --bg-card: #ffffff;
+  --accent-color: #1d4ed8;       /* Dark Royal Blue */
+  --accent-hover: #1e40af;       /* Deep Navy Blue */
+  --accent-light: #eff6ff;       /* Soft Blue Tint */
+  --border-color: #e2e8f0;       /* Crisp Border */
+  --text-main: #0f172a;          /* Charcoal Black */
+  --text-muted: #64748b;         /* Slate Grey */
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  letter-spacing: -0.02em;
+  color: #0f172a !important;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Minimalist Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1d4ed8;
+}
+
+/* Pure White Cards & Panels */
+.bg-slate-950,
+.bg-slate-900,
+.bg-slate-900\/95,
+.bg-slate-900\/90,
+.bg-slate-900\/80,
+.bg-slate-950\/95,
+.bg-slate-950\/90,
+.bg-slate-950\/80,
+.bg-slate-950\/50,
+.bg-slate-950\/40,
+.bg-slate-900\/40 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.bg-slate-800,
+.bg-slate-800\/80,
+.bg-slate-800\/60,
+.bg-slate-800\/40 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Neutralize legacy dark/colored badge artifacts into Dark Blue & Pure White */
+.bg-red-950,
+.bg-red-950\/80,
+.bg-red-950\/60,
+.bg-red-950\/50,
+.bg-red-950\/40,
+.bg-red-950\/30,
+.bg-red-950\/20,
+.bg-emerald-950,
+.bg-emerald-950\/80,
+.bg-emerald-950\/60,
+.bg-emerald-950\/50,
+.bg-emerald-950\/40,
+.bg-emerald-950\/30,
+.bg-amber-950,
+.bg-amber-950\/80,
+.bg-amber-950\/60,
+.bg-amber-950\/40,
+.bg-amber-950\/30,
+.bg-purple-950,
+.bg-purple-950\/80,
+.bg-purple-950\/60,
+.bg-purple-950\/40,
+.bg-purple-900\/40 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+.border-red-800,
+.border-red-900,
+.border-red-800\/80,
+.border-red-800\/60,
+.border-emerald-800,
+.border-emerald-800\/80,
+.border-emerald-800\/60,
+.border-amber-800,
+.border-amber-800\/60,
+.border-purple-800,
+.border-purple-800\/60 {
+  border-color: #bfdbfe !important;
+}
+
+/* Crisp Clean Borders */
+.border-slate-800,
+.border-slate-800\/80,
+.border-slate-800\/60,
+.border-slate-700,
+.border-slate-900 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Crisp Dark Typography */
+.text-white,
+.text-slate-100,
+.text-slate-200 {
+  color: #0f172a !important;
+}
+
+.text-slate-300,
+.text-slate-400 {
+  color: #475569 !important;
+}
+
+.text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Dark Blue Unified Accent System (#1d4ed8 / #1e40af) */
+.text-sky-400,
+.text-sky-300,
+.text-sky-500,
+.text-sky-600,
+.text-sky-700,
+.text-blue-400,
+.text-blue-500,
+.text-blue-600,
+.text-blue-700,
+.text-indigo-600,
+.text-indigo-500 {
+  color: #1d4ed8 !important;
+}
+
+.bg-sky-600,
+.bg-sky-500,
+.bg-blue-600,
+.bg-blue-500,
+.bg-blue-700,
+.bg-indigo-600 {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+.bg-sky-950,
+.bg-sky-950\/90,
+.bg-sky-950\/80,
+.bg-sky-950\/60,
+.bg-sky-950\/40,
+.bg-sky-50,
+.bg-blue-50,
+.bg-indigo-50 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+.border-sky-500,
+.border-sky-600,
+.border-sky-400,
+.border-sky-800,
+.border-sky-800\/80,
+.border-sky-800\/60,
+.border-sky-200,
+.border-sky-300,
+.border-blue-500,
+.border-blue-600,
+.border-blue-200,
+.border-blue-300,
+.border-indigo-500,
+.border-indigo-200 {
+  border-color: #1d4ed8 !important;
+}
+
+/* Glassmorphism Pure White Tokens */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #e2e8f0;
+}
+
+.glass-panel-elevated {
+  background: #ffffff;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 10px 25px rgba(29, 78, 216, 0.08);
+}

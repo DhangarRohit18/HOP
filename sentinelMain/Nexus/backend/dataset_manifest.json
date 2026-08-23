@@ -1,0 +1,38 @@
+{
+  "dataset_version": "1.0.0",
+  "random_seed": 42,
+  "namespace": "a3b4c5d6-e7f8-4901-8234-56789abcdef0",
+  "baseline_date": "2026-08-01",
+  "dataset_checksum": "a7f01bf25700e768edfc4ffbf6c5f61427bde8d68361b821c510b05444c613c9",
+  "record_counts": {
+    "suppliers": 12,
+    "components": 36,
+    "warehouses": 5,
+    "inventory_positions": 120,
+    "purchase_orders": 75,
+    "purchase_order_items": 150,
+    "shipments": 60,
+    "production_orders": 40,
+    "production_order_items": 160,
+    "customer_orders": 100,
+    "customer_order_items": 180,
+    "customer_order_allocations": 120,
+    "supplier_performance": 144,
+    "core_entities": 292,
+    "core_resources": 36,
+    "core_dependencies": 280
+  },
+  "vulnerability_identifiers": {
+    "v1_single_source_supplier": "SUP-001",
+    "v1_v7_component": "CMP-001",
+    "v2_unreliable_supplier": "SUP-003",
+    "v3_warehouse": "WH-001",
+    "v4_shipment": "SHP-2026-001",
+    "v5_customer_order": "SO-2026-001",
+    "v6_supplier_capacity_utilization": 0.96
+  },
+  "metadata_informational_only": {
+    "generated_at": "2026-08-23T02:53:33.520887+00:00",
+    "note": "generated_at is informational and explicitly excluded from dataset_checksum calculation"
+  }
+}

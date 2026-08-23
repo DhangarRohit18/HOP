@@ -1,0 +1,27 @@
+{
+  "name": "nexus-extension",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "NEXUS Contextual Operational Intelligence Chrome Extension Shell",
+  "scripts": {
+    "dev": "vite build && vite build --config vite.content.config.ts",
+    "build": "vite build && vite build --config vite.content.config.ts && node copy-manifest.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "jsqr": "^1.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^20.14.9",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.2",
+    "vite": "^5.4.2",
+    "vitest": "^1.6.0"
+  }
+}
