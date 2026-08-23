@@ -209,7 +209,7 @@ export const GraphViewerPage: React.FC = () => {
     setDrawerLoading(true);
 
     try {
-      const [nodeType, cleanId] = nodeId.includes(':') ? nodeId.split(':') : ['ENTITY', nodeId];
+      const [nodeType, cleanId] = nodeId?.includes(':') ? nodeId.split(':') : ['ENTITY', nodeId];
       const [detailRes, depsRes] = await Promise.allSettled([
         fetchNodeGraph(nodeType, cleanId),
         fetchNodeDependencies(nodeType, cleanId),
@@ -686,12 +686,12 @@ export const GraphViewerPage: React.FC = () => {
                   />
 
                   {/* Node type label */}
-                  <text x="0" y="-12" textAnchor="middle" fill="#E2E8F0" fontSize="7" fontFamily="monospace" fontWeight="bold" letterSpacing="1" style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.8)' }}>
+                  <text x="0" y="-12" textAnchor="middle" fill="#000000" fontSize="8" fontFamily="monospace" fontWeight="bold" letterSpacing="1">
                     {node.type}
                   </text>
 
                   {/* Node code — main label */}
-                  <text x="0" y="4" textAnchor="middle" fill="#FFFFFF" fontSize="11" fontFamily="monospace" fontWeight="900" letterSpacing="0.5" style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.9)' }}>
+                  <text x="0" y="4" textAnchor="middle" fill="#000000" fontSize="11" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
                     {node.code}
                   </text>
 

@@ -196,7 +196,7 @@ export const ImpactWorkspacePage: React.FC<ImpactWorkspacePageProps> = ({ onNavi
   // Helper for node display code
   const formatNodeLabel = (nodeId: string) => {
     if (nodeCodeMap[nodeId]) return nodeCodeMap[nodeId];
-    if (nodeId.includes(':')) {
+    if (nodeId?.includes(':')) {
       const parts = nodeId.split(':');
       if (parts[1] && parts[1].length <= 12) return parts[1];
       return `${parts[0]}:${parts[1]?.slice(0, 6)}…`;
@@ -208,9 +208,9 @@ export const ImpactWorkspacePage: React.FC<ImpactWorkspacePageProps> = ({ onNavi
   const isGoldenPathScenario = useMemo(() => {
     if (!result) return false;
     return (
-      result.disruption_id.includes('INC-2026-001') ||
-      result.disruption_id.includes('DIS-HYP-001') ||
-      result.target_node_id.includes('de52b8c0') ||
+      result.disruption_id?.includes('INC-2026-001') ||
+      result.disruption_id?.includes('DIS-HYP-001') ||
+      result.target_node_id?.includes('de52b8c0') ||
       selectedShortcutKey === 'SUP-001'
     );
   }, [result, selectedShortcutKey]);
